@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: white;
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding-top: 60px;
+        }
+
+        header {
+            width: 100%;
+            background-color: #0056b3;
+            padding: 15px 0;
+            text-align: center;
+            box-shadow: 0 4px 2px -2px gray;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        nav ul li {
+            display: inline;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 10px 15px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        nav ul li a:hover {
+            background-color: lightgray;
+        }
+
+        .form-container {
+            width: 350px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            border-radius: 10px;
+            padding: 30px;
+            background-color: aliceblue;
+            margin-top: 30px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 10px;
+            border: 1px solid rgb(2, 15, 17);
+        }
+
+        button {
+            width: 100%;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+            color: white;
+            background-color: rgb(9, 161, 47);
+            margin-top: 30px;
+        }
+
+        button:hover {
+            background-color: rgb(10, 151, 17);
+        }
+
+        .flash-messages ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .success {
+            color: green;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .link {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        div a {
+            text-decoration: none;
+            color: blue;
+            cursor: pointer;
+            font-size: 18px;
+            font-family: sans-serif;
+        }
+
+        #flash-messages {
+            color: green;
+            text-align: center;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .back{
+            margin-top: 20px;
+        }
+        
+/* Hero Section */
+#hero {
+background-color: white;
+  color: black;
+  text-align: center;
+}
+
+#hero h1 {
+  font-size: 2em;
+  margin-top: 50px;
+  margin-bottom: 20px;
+}
+
+#hero p {
+  font-size: 1.2em;
+  margin-bottom: 25px;
+}
+
+.btn {
+  background-color: #ff5733;
+  padding: 10px 20px;
+  font-size: 1.2em;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+}
+
+.btn:hover {
+  background-color: #c13f22;
+}  
+.continue{
+   margin-top: 20px;
+}
+
+</style>
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/login">Sign In</a></li>
+                <li><a href="/register">Sign Up</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+                <li><a href="#developers">Developers</a></li>
+            </ul>
+        </nav>
+    </header>
+<!-- Hero Section -->
+<section id="hero">
+    <h1>Welcome to AI-Based Symptom Checker</h1>
+    <p>Predict your health symptoms with the power of AI. Start by logging in or signing up.</p>
+    <a href="/register" class="btn">Sign Up Now</a>
+    
+  </section>
+  <p class="continue">Or continue to sign in</p>
+  <div><i class="bi bi-chevron-double-down"></i></div>
+    <div class="form-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div id="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form id="loginForm" method="POST" action="/login">
+            {{ form.hidden_tag() }}
+            <h2>Login</h2>
+            <label for="email" aria-label="Email">Email</label>
+            <input type="email" name="email" id="email" required>
+            <div id="emailError" class="error"></div>
+            <label for="password" aria-label="Password">Password</label>
+            <input type="password" name="password" id="password" required>
+            <div id="error" class="error"></div>
+            <button type="submit">Login</button>
+            <div class="link">
+                <a href="/forgot_password" id="forgot-link">Forgot password?</a>
+                <span>Or</span>
+                <a href="/register" id="register-link">Register</a>
+               
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const log = document.getElementById('loginForm');
+
+        log.addEventListener('submit', function (event) {
+            event.preventDefault();
+            let valid = true;
+
+            const em = document.getElementById('email');
+            const emErr = document.getElementById('emailError');
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            if (!emailPattern.test(em.value.trim())) {
+                emErr.textContent = "Enter a valid email address!";
+                valid = false;
+            } else {
+                emErr.textContent = "";
+            }
+
+            const psd = document.getElementById('password');
+            const psdError = document.getElementById('error');
+
+            if (psd.value.trim().length < 6) {
+                psdError.textContent = "Password must be at least 6 characters!";
+                valid = false;
+            } else {
+                psdError.textContent = "";
+            }
+
+            if (valid) {
+                log.submit();
+            }
+        });
+            // Wait for the page to fully load
+document.addEventListener("DOMContentLoaded", function() {
+    // Select all flash messages
+    let flashMessages = document.querySelectorAll(".alert");
+
+    flashMessages.forEach(function(message) {
+        // Set a timeout to remove the message after 3 seconds (3000ms)
+        setTimeout(function() {
+            message.style.transition = "opacity 0.5s";
+            message.style.opacity = "0"; // Fade out
+            setTimeout(() => message.remove(), 500); // Remove from DOM
+        }, 3000);
+    });
+});
+    </script>
+</body>
+</html>

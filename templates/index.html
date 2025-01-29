@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Based Symptom Checker</title>
+    <link rel="stylesheet" href="static/styles.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <header class="d-flex justify-content-between align-items-center p-3 bg-light border-bottom">
+        <div class="d-flex align-items-center">
+            <img src="static/logo.png" alt="Logo" class="me-2 shape" style="height: 70px;">
+            <span class="h5 mb-0">Healthcare</span>
+        </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link btn btn-outline-secondary" id="nav_links">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link btn btn-outline-primary" id="nav_links">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link btn btn-outline-success" id="nav_links">Contacts</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link btn btn-outline-info" id="nav_links">Developer</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link btn btn-outline-warning" id="nav_links">Documentation</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/logout" class="btn btn-outline-danger ms-3">Logout</a>
+                    </li>
+                </ul>
+          
+            </div>
+        </nav>
+ 
+    </header>
+
+<div class="search-bar">
+    <input type="text" name="search" id="search" placeholder="search">
+    <button type="submit" id="submit">Search</button>
+</div>
+    <div class="container mt-5" >
+        <h1 class="text-center mb-5">AI-Based Symptom Checker</h1>
+        <form id="symptom-form" class="bg-dark">
+            <div class="form-group">
+                <label for="symptoms" class="text-white">Enter Symptoms (comma-separated):</label>
+                <input type="text" id="symptoms" name="symptoms" class="form-control" placeholder="e.g., headache, fatigue">
+                <div id="erroMessage"></div>
+            </div>
+            <span id="errorMessage" style="color: red; font-size: 0.9em;"></span><br><br>
+            <button type="submit" class="btn btn-primary mt-3 predict" id="predict-button">Predict</button>
+        </form> 
+
+        <!-- Placeholder for dynamic buttons -->
+        <div id="dynamic-buttons" class="mt-4"></div>
+    </div>
+
+    <!-- Prediction Modal -->
+    <div class="modal fade" id="resultModal" tabindex="-1" aria-labelledby="resultModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="resultModalLabel">Prediction Result</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="resultText">The predicted disease will appear here.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="dynamic-buttons" class="mt-4"></div>
+
+    <!-- Medication Modal -->
+    <div class="modal fade" id="medicationModal" tabindex="-1" aria-labelledby="medicationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="medicationModalLabel">Medication</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Loading medication details...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Description Modal -->
+    <div class="modal fade" id="descriptionModal" tabindex="-1" aria-labelledby="descriptionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="descriptionModalLabel">Description</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Loading description details...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- precaution Modal -->
+    <div class="modal fade" id="precautionModal" tabindex="-1" aria-labelledby="precautionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="precautionModalLabel">Precaution</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Loading precaution details...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+     <!-- Diets Modal -->
+     <div class="modal fade" id="dietsModal" tabindex="-1" aria-labelledby="dietsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="dietsModalLabel">Diets</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Loading Diets details...</p>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Workout Modal -->
+    <div class="modal fade" id="workoutModal" tabindex="-1" aria-labelledby="workoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="workoutModalLabel">Workout</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Loading Workout details...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="static/script.js"></script>  
+</body>
+</html>
