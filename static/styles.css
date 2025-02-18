@@ -154,3 +154,45 @@ button:hover {
     color: white;
 }
 
+#sendResultsBtn{
+    margin-right: 100px;
+}
+/***Spinner styling*****/
+
+#spinner-overlay {
+    transition: opacity 0.3s ease;
+}
+
+.spinner-container {
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 30px;
+    border-radius: 10px;
+}
+
+/* Testimonials and How It Works Section */
+.testimonials-and-how-it-works {
+    background-color: #f8f9fa;
+    padding: 60px 0;
+}
+
+.testimonials-and-how-it-works h2 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 40px;
+}
+
+.testimonials-and-how-it-works .card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+}
+
+.testimonials-and-how-it-works .card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.rating {
+    color: #ffc107;
+    font-size: 1.2rem;
+}
+

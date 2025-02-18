@@ -113,5 +113,112 @@ document.addEventListener("DOMContentLoaded", function() {
         }, 3000);
     });
 });
+// Handle "Take Action" button click
+$("#sendResultsBtn").click(function() {
+    const predictedDisease = $("#resultText").text().replace("Predicted Disease: ", "");
+    
+    // Hide the prediction modal
+    $("#resultModal").modal("hide");
+    
+    // Set the disease name
+    $("#disease-result").text(`Disease: ${predictedDisease}`);
+    
+    // Fetch all details at once
+    $.ajax({
+        url: `/details/${predictedDisease}`,
+        type: "GET",
+        success: function(response) {
+            if (response.error) {
+                alert(response.error);
+            } else {
+                // Populate the results in the accordion
+                $("#description-result").text(response.description);
+                $("#medication-result").text(response.medication);
+                $("#precaution-result").text(response.precautions_df);
+                $("#diet-result").text(response.diets);
+                $("#workout-result").text(response.workout_df);
+                
+                // Get the user's email from the server
+                $.ajax({
+                    url: "/get-user-email",
+                    type: "GET",
+                    success: function(emailResponse) {
+                        if (emailResponse.email) {
+                            $("#emailAddress").val(emailResponse.email);
+                        }
+                        
+                        // Show the results form modal
+                        $("#resultsFormModal").modal("show");
+                    },
+                    error: function() {
+                        // If we can't get the email, still show the modal
+                        $("#resultsFormModal").modal("show");
+                    }
+                });
+            }
+        },
+        error: function() {
+            alert("Failed to fetch details. Please try again.");
+        }
+    });
+});
+// Handle email form submission
+$("#emailResultsForm").on("submit", function(e) {
+    e.preventDefault();
+    
+    const emailAddress = $("#emailAddress").val();
+    const disease = $("#disease-result").text().replace("Disease: ", "");
+    const description = $("#description-result").text();
+    const medication = $("#medication-result").text();
+    const precaution = $("#precaution-result").text();
+    const diet = $("#diet-result").text();
+    const workout = $("#workout-result").text();
 
+
+    $("#spinner-overlay").removeClass("d-none");
+    
+    // Send the data to the server
+$.ajax({
+    url: "/send-results",
+    type: "POST",
+    data: {
+        email: emailAddress,
+        disease: disease,
+        description: description,
+        medication: medication,
+        precaution: precaution,
+        diet: diet,
+        workout: workout
+    },
+    success: function(response) {
+        if (response.success) {
+            // Hide the modal first
+            $("#resultsFormModal").modal("hide");
+            
+            // Add the flash message by making a server request to set it
+            $.get("/set-flash-message", { type: "success", message: "Results have been sent to your email!" }, function() {
+                // Reload the page to show the flash message
+                window.location.reload();
+            });
+        } else {
+            // Show error flash message
+            $.get("/set-flash-message", 
+                { type: "error", message: response.message || "Failed to send email. Please try again." }, 
+                function() {
+                    window.location.reload();
+                }
+            );
+        }
+    },
+    error: function() {
+        // Show error flash message for AJAX errors
+        $.get("/set-flash-message", 
+            { type: "error", message: "An error occurred while sending the email. Please try again." }, 
+            function() {
+                window.location.reload();
+            }
+        );
+    }
+});
+});
 

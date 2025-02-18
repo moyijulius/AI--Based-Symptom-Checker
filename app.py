@@ -1,4 +1,3 @@
-# app.py
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session
 from werkzeug.security import generate_password_hash, check_password_hash
 import pickle
@@ -9,6 +8,7 @@ from flask_sqlalchemy import SQLAlchemy
 from model import db, User  # Import db and User from model.py
 from forms import RegistrationForm, LoginForm  # Import forms from forms.py
 import logging
+from flask_mail import Mail, Message
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -17,8 +17,20 @@ app.secret_key = 'your_secret_key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Disable Flask-SQLAlchemy modification tracking
 
-# Initialize SQLAlchemy
+
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'  # Replace with your email provider's SMTP server
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'moyijulius17@gmail.com'  # Replace with your email
+app.config['MAIL_PASSWORD'] = 'fwyh bkbi qdtp twbb'     # Replace with your email password or app password
+app.config['MAIL_DEFAULT_SENDER'] = 'moyijulius17@gmail.com'  # Replace with your email
+
+
+# Initialize SQLAlchemy and Mail
 db.init_app(app)
+mail = Mail(app)
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -32,6 +44,7 @@ def login():
         if user and check_password_hash(user.password_hash, password):
             session['user_id'] = user.id
             session['username'] = user.username
+            session['email'] = user.email  # Store user email in session
             flash(f"Welcome, {user.username}!", "success")  # Updated message
             return redirect(url_for('home'))
         else:
@@ -39,8 +52,6 @@ def login():
             return redirect(url_for('login'))
 
     return render_template('login.html', form=form)
-
-
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -70,6 +81,7 @@ def register():
             return redirect(url_for('register'))
 
     return render_template('register.html', form=form)
+
 @app.route("/")
 def home():
     if 'user_id' not in session:  # Check if user is logged in by checking the session
@@ -77,15 +89,11 @@ def home():
         return redirect(url_for('login'))  # Redirect to the login page if not logged in
     return render_template("index.html", symptoms=symptoms)  # Display the home page if logged in
 
-
 @app.route('/logout')
 def logout():
     session.clear()
     flash("Logged out successfully!.", "success")
     return redirect(url_for('login'))
-
-
-# Model loading and other routes omitted for brevity
 
 # Load the trained model and required files
 try:
@@ -105,7 +113,7 @@ try:
     workout_df_data=pd.read_csv("data/workout_df.csv")
 except FileNotFoundError as e:
     print(f"Error loading CSV files: {e}")
-    medication_data, description_data,precautions_df_data,diets_data,workout_df_data = pd.DataFrame(), pd.DataFrame()
+    medication_data, description_data, precautions_df_data, diets_data, workout_df_data = pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
 
 def match_symptoms(user_symptoms, valid_symptoms, threshold=0.6):
     matched = []
@@ -117,9 +125,6 @@ def match_symptoms(user_symptoms, valid_symptoms, threshold=0.6):
         else:
             unmatched.append(user_symptom)
     return matched, unmatched
-
-
-
 
 @app.route("/predict", methods=["POST"])
 def predict():
@@ -156,7 +161,6 @@ def get_disease_details(disease):
         # Fetch medication and description for the given disease
         medication = medication_data[
             medication_data["Disease"].str.strip().str.lower() == disease.strip().lower()
-
         ]
         description = description_data[
            description_data["Disease"].str.strip().str.lower() == disease.strip().lower()
@@ -167,28 +171,129 @@ def get_disease_details(disease):
         diets = diets_data[
             diets_data["Disease"].str.strip().str.lower() == disease.strip().lower()
         ]
-        workout_df= workout_df_data[
+        workout_df = workout_df_data[
            workout_df_data["Disease"].str.strip().str.lower() == disease.strip().lower()
         ]
-
 
         # Get the first match or return default messages
         medication_info = medication["Medication"].iloc[0] if not medication.empty else "No medication information available."
         description_info = description["Description"].iloc[0] if not description.empty else "No description available."
         precautions_df_info = precautions_df["Precaution_1"].iloc[0] if not precautions_df.empty else "No description available."
         diets_info = diets["Diet"].iloc[0] if not diets.empty else "No Diets available."
-        workout_df_info = workout_df["workout"].iloc[0] if not  workout_df.empty else "No Workout available."
+        workout_df_info = workout_df["workout"].iloc[0] if not workout_df.empty else "No Workout available."
 
         return jsonify({
             "medication": medication_info,
             "description": description_info,
-            "precautions_df":precautions_df_info,
-            "diets":diets_info,
-            "workout_df":workout_df_info,
+            "precautions_df": precautions_df_info,
+            "diets": diets_info,
+            "workout_df": workout_df_info,
         })
     except Exception as e:
         return jsonify({"error": str(e)})
+    
+    # route to send results
+@app.route("/send-results", methods=["POST"])
+def send_results():
+    if 'user_id' not in session:
+        return jsonify({"success": False, "message": "Please login to access this feature."})
+    
+    try:
+        # Get data from the request
+        email = request.form.get("email")
+        disease = request.form.get("disease")
+        description = request.form.get("description")
+        medication = request.form.get("medication")
+        precaution = request.form.get("precaution")
+        diet = request.form.get("diet")
+        workout = request.form.get("workout")
+        
+        # Create the email content
+        subject = f"Your Health Report for {disease}"
+        body = f"""
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; }}
+                .container {{ max-width: 600px; margin: auto; padding: 20px; }}
+                h1 {{ color: #2a5885; }}
+                h2 {{ color: #507299; margin-top: 20px; }}
+                p {{ line-height: 1.5; }}
+                .footer {{ margin-top: 30px; font-size: 0.8em; color: #777; }}
+                #dis{{color:red;}}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>Your Health Report</h1>
+                <h2>Predicted Disease: <span id="dis">{disease}<span></h2>
+                
+                <h2>Description</h2>
+                <p>{description}</p>
+                
+                <h2>Recommended Medication</h2>
+                <p>{medication}</p>
+                
+                <h2>Precautions</h2>
+                <p>{precaution}</p>
+                
+                <h2>Recommended Diet</h2>
+                <p>{diet}</p>
+                
+                <h2>Recommended Workout</h2>
+                <p>{workout}</p>
+                
+                <div class="footer">
+                    <p>This health report is generated based on your symptoms by our AI system.</p>
+                    <p>Disclaimer: This is not medical advice. Please consult a healthcare professional for proper diagnosis and treatment.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        # Send the email
+        msg = Message(subject=subject, recipients=[email], html=body)
+        mail.send(msg)
+        
+        return jsonify({"success": True})
+    except Exception as e:
+        print(f"Error sending email: {e}")
+        return jsonify({"success": False, "message": f"Error: {e}"})\
+        
+# get email
+@app.route("/get-user-email", methods=["GET"])
+def get_user_email():
+    if 'email' in session:
+        return jsonify({"email": session['email']})
+    return jsonify({"email": ""})
 
+#flash message for email sending
+
+@app.route("/set-flash-message", methods=["GET"])
+def set_flash_message():
+    message_type = request.args.get("type", "info")  # Default to 'info' if type not specified
+    message = request.args.get("message", "")
+    
+    if message:
+        flash(message, message_type)
+    
+    return jsonify({"success": True})
+
+# about view function and path
+@app.route('/about')
+def about():
+    return render_template("about.html")
+
+# contact view function and path
+@app.route('/contact')
+def contact():
+    return render_template("contact.html")
+
+# developer view function and path
+@app.route('/developer')
+def developer():
+    return render_template("developer.html")
 
 if __name__ == "__main__":
     app.run(debug=True)
