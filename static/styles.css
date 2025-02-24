@@ -123,7 +123,7 @@ button:hover {
 }
 
 /** Toast notification **/
-.toast {
+.toast{
     position: fixed;
     bottom: 20px;
     right: 20px;
@@ -188,7 +188,7 @@ button:hover {
 
 .testimonials-and-how-it-works .card:hover {
     transform: translateY(-10px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: inset 5px 5px 10px rgba(0, 0, 0, 0.5);
 }
 
 .rating {
